@@ -443,14 +443,16 @@ function addDataToPanels(panels: PanelsMap, sqlDataMap: SQLDataMap): PanelsMap {
 
 const wrapDefinitionInArtificialDashboard = (
   definition: DashboardDefinition,
-  layout: any
+  layout: any,
+  panelType: string
 ): DashboardDefinition => {
   const { title: defTitle, ...definitionWithoutTitle } = definition;
   const { title: layoutTitle, ...layoutWithoutTitle } = layout;
   return {
     artificial: true,
     name: definition.name,
-    title: definition.title,
+    // Don't set a title for a benchmark - they render their own
+    title: panelType !== "benchmark" ? definition.title : undefined,
     panel_type: "dashboard",
     children: [
       {
@@ -537,7 +539,8 @@ function reducer(state, action) {
       if (action.dashboard_node.panel_type !== "dashboard") {
         dashboard = wrapDefinitionInArtificialDashboard(
           originalDashboard,
-          action.layout
+          action.layout,
+          action.dashboard_node.panel_type
         );
       } else {
         dashboard = {
@@ -572,7 +575,8 @@ function reducer(state, action) {
       if (action.dashboard_node.panel_type !== "dashboard") {
         dashboard = wrapDefinitionInArtificialDashboard(
           originalDashboard,
-          action.layout
+          action.layout,
+          action.dashboard_node.panel_type
         );
       } else {
         dashboard = {

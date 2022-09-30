@@ -78,16 +78,6 @@ const Container = ({
               dispatch({
                 type: DashboardActions.SELECT_PANEL,
                 panel: { ...expandDefinition },
-                // panel: {
-                //   ...{
-                //     ...panelDefinition,
-                //     children: definition
-                //       ? definition.children
-                //       : layoutDefinition
-                //       ? layoutDefinition.children
-                //       : [],
-                //   },
-                // },
               });
             }}
           >

@@ -6,10 +6,10 @@ import ControlResultNode from "../components/dashboards/check/common/node/Contro
 import ControlRunningNode from "../components/dashboards/check/common/node/ControlRunningNode";
 import KeyValuePairNode from "../components/dashboards/check/common/node/KeyValuePairNode";
 import RootNode from "../components/dashboards/check/common/node/RootNode";
+import useCheckGroupingConfig from "./useCheckGroupingConfig";
 import usePrevious from "./usePrevious";
 import {
   CheckDisplayGroup,
-  CheckDisplayGroupType,
   CheckNode,
   CheckResult,
   CheckSummary,
@@ -30,7 +30,6 @@ import {
   PanelDefinition,
   useDashboard,
 } from "./useDashboard";
-import { useSearchParams } from "react-router-dom";
 
 type CheckGroupingActionType = ElementType<typeof checkGroupingActions>;
 
@@ -366,44 +365,7 @@ const CheckGroupingProvider = ({
 }: CheckGroupingProviderProps) => {
   const { panelsMap } = useDashboard();
   const [nodeStates, dispatch] = useReducer(reducer, { nodes: {} });
-  const [searchParams] = useSearchParams();
-
-  const groupingsConfig = useMemo(() => {
-    const rawGrouping = searchParams.get("grouping");
-    if (rawGrouping) {
-      const groupings: CheckDisplayGroup[] = [];
-      const groupingParts = rawGrouping.split(",");
-      for (const groupingPart of groupingParts) {
-        const typeValueParts = groupingPart.split("|");
-        if (typeValueParts.length > 1) {
-          groupings.push({
-            type: typeValueParts[0] as CheckDisplayGroupType,
-            value: typeValueParts[1],
-          });
-        } else {
-          groupings.push({
-            type: typeValueParts[0] as CheckDisplayGroupType,
-          });
-        }
-      }
-      return groupings;
-    } else {
-      return [
-        // { type: "status" },
-        // { type: "reason" },
-        // { type: "resource" },
-        // { type: "severity" },
-        // { type: "dimension", value: "account_id" },
-        // { type: "dimension", value: "region" },
-        // { type: "tag", value: "service" },
-        // { type: "tag", value: "cis_type" },
-        // { type: "tag", value: "cis_level" },
-        { type: "benchmark" },
-        { type: "control" },
-        { type: "result" },
-      ] as CheckDisplayGroup[];
-    }
-  }, [searchParams]);
+  const groupingsConfig = useCheckGroupingConfig();
 
   const [
     benchmark,

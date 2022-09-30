@@ -29,6 +29,9 @@ const Children = ({
                 withTitle={withTitle}
               />
             );
+          case "benchmark_title":
+            const BenchmarkTitle = getComponent("benchmark_title");
+            return <BenchmarkTitle key={child.name} {...child} />;
           case "benchmark_tree":
             const BenchmarkTree = getComponent("benchmark_tree");
             return <BenchmarkTree key={child.name} {...child} />;

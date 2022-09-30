@@ -1,6 +1,7 @@
 import kebabCase from "lodash/kebabCase";
 import * as outlineIconExports from "@heroicons/react/24/outline";
 import * as solidIconExports from "@heroicons/react/24/solid";
+import { classNames } from "../../utils/styles";
 
 const icons = {};
 
@@ -173,14 +174,26 @@ Object.entries(solidIconExports).forEach(([name, exported]) => {
 interface IconProps {
   className?: string;
   icon: string;
+  onClick?: () => void;
+  title?: string;
 }
 
-const Icon = ({ className = "h-6 w-6", icon }: IconProps) => {
+const Icon = ({ className = "h-6 w-6", icon, onClick, title }: IconProps) => {
+  const clickAwareClassName = classNames(
+    className,
+    onClick ? "cursor-pointer" : null
+  );
   const MatchingIcon = icons[getDashboardIconName(icon)];
   if (!MatchingIcon) {
     return null;
   }
-  return <MatchingIcon className={className} />;
+  return (
+    <MatchingIcon
+      className={clickAwareClassName}
+      onClick={onClick}
+      title={title}
+    />
+  );
 };
 
 export default Icon;

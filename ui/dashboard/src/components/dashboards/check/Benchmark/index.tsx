@@ -19,6 +19,8 @@ import {
 import { default as BenchmarkType } from "../common/Benchmark";
 import { getComponent, registerComponent } from "../../index";
 import { useMemo } from "react";
+import { classNames } from "../../../../utils/styles";
+import CheckGroupingConfig from "../CheckGroupingConfig";
 const CheckGrouping = getComponent("check_grouping");
 const Table = getComponent("table");
 
@@ -37,7 +39,7 @@ type InnerCheckProps = {
 };
 
 const Benchmark = (props: InnerCheckProps) => {
-  const { dashboard, selectedDashboard } = useDashboard();
+  const { selectedDashboard } = useDashboard();
   const benchmarkDataTable = useMemo(() => {
     if (
       !props.benchmark ||
@@ -153,11 +155,19 @@ const Benchmark = (props: InnerCheckProps) => {
   return (
     <Container
       allowChildPanelExpand={false}
-      allowExpand={true}
+      allowExpand={false}
       definition={{
         name: props.definition.name,
         panel_type: "container",
         children: [
+          {
+            name: `${props.definition.name}.container.title`,
+            panel_type: "benchmark_title",
+            title: props.benchmark.title,
+            properties: {
+              is_root: selectedDashboard?.type === "benchmark",
+            },
+          },
           {
             name: `${props.definition.name}.container.summary`,
             panel_type: "container",
@@ -181,7 +191,7 @@ const Benchmark = (props: InnerCheckProps) => {
           },
         ],
         data: benchmarkDataTable,
-        title: dashboard?.artificial ? undefined : props.benchmark.title,
+        // title: dashboard?.artificial ? undefined : props.benchmark.title,
         width: props.definition.width,
       }}
       // @ts-ignore
@@ -190,7 +200,7 @@ const Benchmark = (props: InnerCheckProps) => {
         title: props.benchmark.title || selectedDashboard?.title,
         data: benchmarkDataTable,
       }}
-      withTitle={props.withTitle}
+      withTitle={false}
     />
   );
 };
@@ -294,7 +304,23 @@ const BenchmarkWrapper = (props: BenchmarkProps) => {
   );
 };
 
+const BenchmarkTitle = ({ title, properties: { is_root } }) => {
+  const className = classNames("col-span-12 grow");
+  const benchmarkTitle = is_root ? (
+    <h1 className={className}>{title}</h1>
+  ) : (
+    <h2 className={className}>{title}</h2>
+  );
+  return (
+    <div className="col-span-12 flex justify-between items-baseline">
+      {benchmarkTitle}
+      <CheckGroupingConfig />
+    </div>
+  );
+};
+
 registerComponent("benchmark", BenchmarkWrapper);
+registerComponent("benchmark_title", BenchmarkTitle);
 registerComponent("benchmark_tree", BenchmarkTree);
 
 export default BenchmarkWrapper;
