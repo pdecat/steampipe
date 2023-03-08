@@ -287,7 +287,7 @@ func startPostgresProcess(ctx context.Context, port int, listen StartListenType,
 		return nil, ctx.Err()
 	}
 
-	listenAddresses := "localhost"
+	listenAddresses := "127.0.0.1"
 
 	if listen == ListenTypeNetwork {
 		listenAddresses = "*"
