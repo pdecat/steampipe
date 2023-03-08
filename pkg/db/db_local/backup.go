@@ -132,7 +132,7 @@ func takeBackup(ctx context.Context, config *pgRunningInfo) error {
 		// only backup the database used by steampipe
 		fmt.Sprintf("--dbname=%s", config.dbName),
 		// connection parameters
-		"--host=localhost",
+		"--host=127.0.0.1",
 		fmt.Sprintf("--port=%d", config.port),
 		fmt.Sprintf("--username=%s", constants.DatabaseSuperUser),
 	)
@@ -160,7 +160,7 @@ func startDatabaseInLocation(ctx context.Context, location string) (*pgRunningIn
 		binaryLocation,
 		// by this time, we are sure that the port if free to listen to
 		"-p", fmt.Sprint(port),
-		"-c", "listen_addresses=localhost",
+		"-c", "listen_addresses=127.0.0.1",
 		// NOTE: If quoted, the application name includes the quotes. Worried about
 		// having spaces in the APPNAME, but leaving it unquoted since currently
 		// the APPNAME is hardcoded to be steampipe.
@@ -325,7 +325,7 @@ func runRestoreUsingList(ctx context.Context, info *RunningDBInstanceInfo, listF
 		// the database name
 		fmt.Sprintf("--dbname=%s", info.Database),
 		// connection parameters
-		"--host=localhost",
+		"--host=127.0.0.1",
 		fmt.Sprintf("--port=%d", info.Port),
 		fmt.Sprintf("--username=%s", info.User),
 	)
