@@ -369,7 +369,7 @@ func startServiceForInstall(port int) (*psutils.Process, error) {
 		getPostgresBinaryExecutablePath(),
 		// by this time, we are sure that the port if free to listen to
 		"-p", fmt.Sprint(port),
-		"-c", "listen_addresses=localhost",
+		"-c", "listen_addresses=127.0.0.1",
 		// NOTE: If quoted, the application name includes the quotes. Worried about
 		// having spaces in the APPNAME, but leaving it unquoted since currently
 		// the APPNAME is hardcoded to be steampipe.

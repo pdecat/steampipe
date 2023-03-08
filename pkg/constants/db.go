@@ -17,7 +17,7 @@ const (
 )
 
 // DatabaseListenAddresses is an arrays is listen addresses which Steampipe accepts
-var DatabaseListenAddresses = []string{"localhost", "127.0.0.1"}
+var DatabaseListenAddresses = []string{"127.0.0.1"}
 
 const (
 	DatabaseDefaultPort              = 9193
