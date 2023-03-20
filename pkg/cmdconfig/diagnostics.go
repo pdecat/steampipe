@@ -39,6 +39,7 @@ func DisplayConfig() {
 		constants.ArgDatabaseQueryTimeout,
 
 		// database
+		constants.ArgDatabaseHost,
 		constants.ArgDatabasePort,
 		constants.ArgListenAddress,
 		constants.ArgSearchPath,

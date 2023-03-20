@@ -86,6 +86,7 @@ func setBaseDefaults() {
 	defaults := map[string]interface{}{
 		constants.ArgUpdateCheck:          true,
 		constants.ArgTelemetry:            constants.TelemetryInfo,
+		constants.ArgDatabaseHost:         constants.DatabaseDefaultHost,
 		constants.ArgDatabasePort:         constants.DatabaseDefaultPort,
 		constants.ArgMaxCacheSizeMb:       constants.DefaultMaxCacheSizeMb,
 		constants.ArgAutoComplete:         true,
