@@ -2,6 +2,9 @@ package db_local
 
 import (
 	"context"
+	"fmt"
+	"log"
+
 	"github.com/spf13/viper"
 	"github.com/turbot/steampipe/pkg/constants"
 	"github.com/turbot/steampipe/pkg/db/db_client"
@@ -9,7 +12,6 @@ import (
 	"github.com/turbot/steampipe/pkg/steampipeconfig"
 	"github.com/turbot/steampipe/pkg/steampipeconfig/modconfig"
 	"github.com/turbot/steampipe/pkg/utils"
-	"log"
 )
 
 // LocalDbClient wraps over DbClient
@@ -23,17 +25,20 @@ func GetLocalClient(ctx context.Context, invoker constants.Invoker, onConnection
 	utils.LogTime("db.GetLocalClient start")
 	defer utils.LogTime("db.GetLocalClient end")
 
+	host := viper.GetString(constants.ArgDatabaseHost)
+	port := viper.GetInt(constants.ArgDatabasePort)
+	log.Println(fmt.Sprintf("[TRACE] GetLocalClient - host=%s, port=%d", host, port))
 	// start db if necessary
-	if err := EnsureDBInstalled(ctx); err != nil {
+	if err := EnsureDBInstalled(ctx, host); err != nil {
 		return nil, modconfig.NewErrorsAndWarning(err)
 	}
 
-	startResult := StartServices(ctx, viper.GetInt(constants.ArgDatabasePort), ListenTypeLocal, invoker)
+	startResult := StartServices(ctx, host, port, ListenTypeLocal, invoker)
 	if startResult.Error != nil {
 		return nil, &startResult.ErrorAndWarnings
 	}
 
-	client, err := newLocalClient(ctx, invoker, onConnectionCallback)
+	client, err := newLocalClient(ctx, host, invoker, onConnectionCallback)
 	if err != nil {
 		ShutdownService(ctx, invoker)
 		startResult.Error = err
@@ -43,7 +48,7 @@ func GetLocalClient(ctx context.Context, invoker constants.Invoker, onConnection
 
 // newLocalClient verifies that the local database instance is running and returns a LocalDbClient to interact with it
 // (This FAILS if local service is not running - use GetLocalClient to start service first)
-func newLocalClient(ctx context.Context, invoker constants.Invoker, onConnectionCallback db_client.DbConnectionCallback) (*LocalDbClient, error) {
+func newLocalClient(ctx context.Context, host string, invoker constants.Invoker, onConnectionCallback db_client.DbConnectionCallback) (*LocalDbClient, error) {
 	utils.LogTime("db.newLocalClient start")
 	defer utils.LogTime("db.newLocalClient end")
 

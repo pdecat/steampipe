@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -107,7 +108,7 @@ is latest. The name is a required argument.
 
 Examples:
 
-  # Update all plugins to their latest available version 
+  # Update all plugins to their latest available version
   steampipe plugin update --all
 
   # Update a common plugin (turbot/aws)
@@ -693,11 +694,15 @@ func getPluginConnectionMap(ctx context.Context) (pluginConnectionMap, failedPlu
 	statushooks.SetStatus(ctx, "Fetching connection map")
 
 	res = &modconfig.ErrorAndWarnings{}
+	host := viper.GetString(constants.ArgDatabaseHost)
+	port := viper.GetInt(constants.ArgDatabasePort)
+	log.Println(fmt.Sprintf("[TRACE] getPluginConnectionMap - host=%s, port=%d", host, port))
+
 	// NOTE: start db if necessary - this will call refresh connections
-	if err := db_local.EnsureDBInstalled(ctx); err != nil {
+	if err := db_local.EnsureDBInstalled(ctx, host); err != nil {
 		return nil, nil, nil, modconfig.NewErrorsAndWarning(err)
 	}
-	startResult := db_local.StartServices(ctx, viper.GetInt(constants.ArgDatabasePort), db_local.ListenTypeLocal, constants.InvokerPlugin)
+	startResult := db_local.StartServices(ctx, host, port, db_local.ListenTypeLocal, constants.InvokerPlugin)
 	if startResult.Error != nil {
 		return nil, nil, nil, &startResult.ErrorAndWarnings
 	}

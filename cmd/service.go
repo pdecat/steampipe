@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -59,9 +60,9 @@ connection from any Postgres compatible database client.`,
 	cmdconfig.
 		OnCmd(cmd).
 		AddBoolFlag(constants.ArgHelp, false, "Help for service start", cmdconfig.FlagOptions.WithShortHand("h")).
-		// for now default port to -1 so we fall back to the default of the deprecated arg
+		AddStringFlag(constants.ArgDatabaseHost, "localhost", "Database service host)").
 		AddIntFlag(constants.ArgDatabasePort, constants.DatabaseDefaultPort, "Database service port").
-		// for now default listen address to empty so we fall back to the default of the deprecated arg
+		// for now default listen address to network so we fall back to the default of the deprecated arg
 		AddStringFlag(constants.ArgListenAddress, string(db_local.ListenTypeNetwork), "Accept connections from: local (localhost only) or network (open) (postgres)").
 		AddStringFlag(constants.ArgServicePassword, "", "Set the database password for this session").
 		// default is false and hides the database user password from service start prompt
@@ -162,6 +163,7 @@ func runServiceStartCmd(cmd *cobra.Command, _ []string) {
 	ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, os.Kill)
 	defer cancel()
 
+	host := viper.GetString(constants.ArgDatabaseHost)
 	port := viper.GetInt(constants.ArgDatabasePort)
 	if port < 1 || port > 65535 {
 		exitCode = constants.ExitCodeInsufficientOrWrongInputs
@@ -180,7 +182,7 @@ func runServiceStartCmd(cmd *cobra.Command, _ []string) {
 		error_helpers.FailOnError(invoker.IsValid())
 	}
 
-	startResult, dashboardState, dbServiceStarted := startService(ctx, port, serviceListen, invoker)
+	startResult, dashboardState, dbServiceStarted := startService(ctx, host, port, serviceListen, invoker)
 	alreadyRunning := !dbServiceStarted
 
 	printStatus(ctx, startResult.DbState, startResult.PluginManagerState, dashboardState, alreadyRunning)
@@ -190,18 +192,19 @@ func runServiceStartCmd(cmd *cobra.Command, _ []string) {
 	}
 }
 
-func startService(ctx context.Context, port int, serviceListen db_local.StartListenType, invoker constants.Invoker) (_ *db_local.StartResult, _ *dashboardserver.DashboardServiceState, dbServiceStarted bool) {
+func startService(ctx context.Context, host string, port int, serviceListen db_local.StartListenType, invoker constants.Invoker) (_ *db_local.StartResult, _ *dashboardserver.DashboardServiceState, dbServiceStarted bool) {
 	statushooks.Show(ctx)
 	defer statushooks.Done(ctx)
+	log.Println(fmt.Sprintf("[TRACE] startService - host=%s", host))
 
-	err := db_local.EnsureDBInstalled(ctx)
+	err := db_local.EnsureDBInstalled(ctx, host)
 	if err != nil {
 		exitCode = constants.ExitCodeServiceStartupFailure
 		error_helpers.FailOnError(err)
 	}
 
 	// start db, refreshing connections
-	startResult := db_local.StartServices(ctx, port, serviceListen, invoker)
+	startResult := db_local.StartServices(ctx, host, port, serviceListen, invoker)
 	if startResult.Error != nil {
 		exitCode = constants.ExitCodeServiceSetupFailure
 		error_helpers.FailOnError(startResult.Error)
@@ -424,7 +427,7 @@ to force a restart.
 
 	// the DB must be installed and therefore is a noop,
 	// and EnsureDBInstalled also checks and installs the latest FDW
-	err = db_local.EnsureDBInstalled(ctx)
+	err = db_local.EnsureDBInstalled(ctx, currentDbState.Host)
 	if err != nil {
 		exitCode = constants.ExitCodeServiceStartupFailure
 		error_helpers.FailOnError(err)
@@ -434,7 +437,7 @@ to force a restart.
 	viper.Set(constants.ArgServicePassword, currentDbState.Password)
 
 	// start db
-	dbStartResult := db_local.StartServices(ctx, currentDbState.Port, currentDbState.ListenType, currentDbState.Invoker)
+	dbStartResult := db_local.StartServices(ctx, currentDbState.Host, currentDbState.Port, currentDbState.ListenType, currentDbState.Invoker)
 	error_helpers.FailOnError(dbStartResult.Error)
 	if dbStartResult.Status == db_local.ServiceFailedToStart {
 		exitCode = constants.ExitCodeServiceStartupFailure
@@ -671,13 +674,13 @@ Managing the Steampipe service:
 
   # Get status of the service
   steampipe service status
-	 
+
   # View database password for connecting from another machine
   steampipe service status --show-password
-  
+
   # Restart the service
   steampipe service restart
-  
+
   # Stop the service
   steampipe service stop
 `
@@ -728,7 +731,7 @@ Database:
 	dashboardMsg := ""
 
 	if dashboardState != nil {
-		browserUrl := fmt.Sprintf("http://localhost:%d/", dashboardState.Port)
+		browserUrl := fmt.Sprintf("http://%s:%d/", dashboardState.Listen[0], dashboardState.Port)
 		dashboardMsg = fmt.Sprintf(`
 Dashboard:
 

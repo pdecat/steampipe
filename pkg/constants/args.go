@@ -10,6 +10,7 @@ const (
 	ArgOn                   = "on"
 	ArgOff                  = "off"
 	ArgClear                = "clear"
+	ArgDatabaseHost         = "database-host"
 	ArgDatabasePort         = "database-port"
 	ArgDatabaseQueryTimeout = "query-timeout"
 	ArgListenAddress        = "database-listen"

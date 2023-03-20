@@ -9,6 +9,7 @@ import (
 
 // Database
 type Database struct {
+	Host         *string `hcl:"host"`
 	Port         *int    `hcl:"port"`
 	Listen       *string `hcl:"listen"`
 	SearchPath   *string `hcl:"search_path"`
@@ -19,6 +20,9 @@ type Database struct {
 func (d *Database) ConfigMap() map[string]interface{} {
 	// only add keys which are non null
 	res := map[string]interface{}{}
+	if d.Host != nil {
+		res[constants.ArgDatabaseHost] = d.Host
+	}
 	if d.Port != nil {
 		res[constants.ArgDatabasePort] = d.Port
 	}
@@ -42,6 +46,9 @@ func (d *Database) ConfigMap() map[string]interface{} {
 func (d *Database) Merge(otherOptions Options) {
 	switch o := otherOptions.(type) {
 	case *Database:
+		if o.Host != nil {
+			d.Host = o.Host
+		}
 		if o.Port != nil {
 			d.Port = o.Port
 		}
@@ -59,6 +66,11 @@ func (d *Database) String() string {
 		return ""
 	}
 	var str []string
+	if d.Host == nil {
+		str = append(str, "  Host: nil")
+	} else {
+		str = append(str, fmt.Sprintf("  Host: %s", *d.Host))
+	}
 	if d.Port == nil {
 		str = append(str, "  Port: nil")
 	} else {
